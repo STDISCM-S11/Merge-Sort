@@ -63,9 +63,8 @@ int main() {
     iterative_merge_sort(array, intervals);
     auto end_time = chrono::high_resolution_clock::now();
 
-    // Check if the array is sorted
-    if (!is_sorted(array)) {
-        cout << "Error: Array is not sorted correctly." << endl;
+    for (const auto& arr : array) {
+        cout << arr << endl;
     }
 
     chrono::duration<double, milli> duration = end_time - start_time;
@@ -120,53 +119,59 @@ vector<ii> generate_intervals(int start, int end) {
     return retval;
 }
 
-//void merge(vector<int>& array, int s, int e) {
-//    int m = s + (e - s) / 2;
-//    vector<int> left;
-//    vector<int> right;
-//    for (int i = s; i <= e; i++) {
-//        if (i <= m) {
-//            left.push_back(array[i]);
-//        }
-//        else {
-//            right.push_back(array[i]);
-//        }
-//    }
-//    int l_ptr = 0, r_ptr = 0;
-//
-//    for (int i = s; i <= e; i++) {
-//        if (r_ptr == (int)right.size() || left[l_ptr] <= right[r_ptr]) {
-//            array[i] = left[l_ptr];
-//            l_ptr++;
-//        }
-//        else {
-//            array[i] = right[r_ptr];
-//            r_ptr++;
-//        }
-//    }
-//}
-
 void merge(vector<int>& array, int s, int e) {
-    int m = s + (e - s) / 2;
-    vector<int> left(array.begin() + s, array.begin() + m + 1);
-    vector<int> right(array.begin() + m + 1, array.begin() + e + 1);
+    int m = s + (e - s) / 2; 
 
-    int l_ptr = 0, r_ptr = 0, k = s;
-
-    while (l_ptr < left.size() && r_ptr < right.size()) {
-        if (left[l_ptr] <= right[r_ptr]) {
-            array[k++] = left[l_ptr++];
+    vector<int> left;
+    vector<int> right;
+    for (int i = s; i <= e; i++) {
+        if (i <= m) {
+            left.push_back(array[i]);
         }
         else {
-            array[k++] = right[r_ptr++];
+            right.push_back(array[i]);
         }
     }
+    int l_ptr = 0, r_ptr = 0;
 
-    while (l_ptr < left.size()) {
-        array[k++] = left[l_ptr++];
-    }
 
-    while (r_ptr < right.size()) {
-        array[k++] = right[r_ptr++];
+    for (int i = s; i <= e; i++) {
+        if (l_ptr >= left.size()) {
+            break;
+        }
+
+        if (r_ptr == (int)right.size() || left[l_ptr] <= right[r_ptr]) {
+            array[i] = left[l_ptr];
+            l_ptr++;
+        }
+        else {
+            array[i] = right[r_ptr];
+            r_ptr++;
+        }
     }
 }
+
+//void merge(vector<int>& array, int s, int e) {
+//    int m = s + (e - s) / 2;
+//    vector<int> left(array.begin() + s, array.begin() + m + 1);
+//    vector<int> right(array.begin() + m + 1, array.begin() + e + 1);
+//
+//    int l_ptr = 0, r_ptr = 0, k = s;
+//
+//    while (l_ptr < left.size() && r_ptr < right.size()) {
+//        if (left[l_ptr] <= right[r_ptr]) {
+//            array[k++] = left[l_ptr++];
+//        }
+//        else {
+//            array[k++] = right[r_ptr++];
+//        }
+//    }
+//
+//    while (l_ptr < left.size()) {
+//        array[k++] = left[l_ptr++];
+//    }
+//
+//    while (r_ptr < right.size()) {
+//        array[k++] = right[r_ptr++];
+//    }
+//}
