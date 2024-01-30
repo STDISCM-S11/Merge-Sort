@@ -69,7 +69,7 @@ int main() {
     }
 
     chrono::duration<double, milli> duration = end_time - start_time;
-    cout << "Iterative Merge Sort took " << duration.count() << " milliseconds." << endl;
+    cout << "Time: " << duration.count() << " milliseconds.\n" << endl;
 
     // Once you get the single-threaded version to work, it's time to implement 
     // the concurrent version. Good luck :)
