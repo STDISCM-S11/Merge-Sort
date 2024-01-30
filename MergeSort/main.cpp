@@ -11,41 +11,54 @@ using namespace std;
 
 typedef pair<int, int> ii;
 
-/*
-This function generates all the intervals for merge sort iteratively, given the
-range of indices to sort. Algorithm runs in O(n).
+// Task queue and mutex
+queue<ii> task_queue;
+mutex queue_mutex;
+mutex print_mutex;
 
-Parameters:
-start : int - start of range
-end : int - end of range (inclusive)
-
-Returns a list of integer pairs indicating the ranges for merge sort.
-*/
 vector<ii> generate_intervals(int start, int end);
-
-/*
-This function performs the merge operation of merge sort.
-
-Parameters:
-array : vector<int> - array to sort
-s     : int         - start index of merge
-e     : int         - end index (inclusive) of merge
-*/
 void merge(vector<int>& array, int s, int e);
 
-void iterative_merge_sort(vector<int>& array, const vector<ii>& intervals);
-bool is_sorted(const vector<int>& array);
+void print_array(const vector<int>& array) {
+    for (int num : array) {
+        cout << num << " ";
+    }
+    cout << endl;
+}
+
+// Thread function for merging
+void merge_task(vector<int>& array) {
+    while (true) {
+        ii task;
+        {
+            lock_guard<mutex> lock(queue_mutex);
+            if (task_queue.empty()) {
+                return;
+            }
+            task = task_queue.front();
+            task_queue.pop();
+        }
+
+        merge(array, task.first, task.second);
+
+        // Synchronize and print the array state
+        {
+            lock_guard<mutex> print_lock(print_mutex);
+            cout << "After merging [" << task.first << ", " << task.second << "]: ";
+            print_array(array);
+        }
+    }
+}
 
 int main() {
-    // TODO: Seed your randomizer
-    srand(0);
+    const unsigned int SEED = 42;
+    srand(SEED);
 
-    // TODO: Get array size and thread count from user
-    int n, thread_count;
-    cout << "Enter number: ";
-    cin >> n;
-    cout << "Enter thread count: ";
-    cin >> thread_count;
+    int N, threadCount;
+    cout << "Enter the size of the array: ";
+    cin >> N;
+    cout << "Enter the thread count: ";
+    cin >> threadCount;
 
     vector<int> array(N);
     for (int i = 0; i < N; ++i) {
@@ -53,8 +66,7 @@ int main() {
     }
     random_shuffle(array.begin(), array.end());
 
-    // TODO: Call the generate_intervals method to generate the merge sequence
-    vector<ii> intervals = generate_intervals(0, n - 1);
+    vector<ii> intervals = generate_intervals(0, N - 1);
 
     // Fill the task queue with merge tasks
     for (auto& interval : intervals) {
