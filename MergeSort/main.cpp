@@ -63,14 +63,14 @@ int main() {
     //iterative_merge_sort(array, intervals);
     //auto end_time = chrono::high_resolution_clock::now();
 
-    for (const auto& interval : intervals) {
-        cout << interval.first << " " << interval.second << endl;
+    for (ii interval : intervals) {
+        merge(array, interval.first, interval.second);
     }
 
-    /*merge(array, intervals[0].first, intervals[0].second);
-    merge(array, intervals[1].first, intervals[1].second);
-    merge(array, intervals[2].first, intervals[2].second);*/
-    merge(array, intervals[16].first, intervals[16].second);
+
+    for (const auto& arr : array) {
+        cout << arr << endl;
+    }
 
     /*for (const auto& interval : intervals) {
         cout << interval.first << " " << interval.second << endl;
@@ -139,9 +139,7 @@ vector<ii> generate_intervals(int start, int end) {
 
 void merge(vector<int>& array, int s, int e) {
     int m = s + (e - s) / 2; 
-    cout << "m: " << m << endl;
-    cout << "s: " << s << endl;
-    cout << "e: " << e << endl << endl;
+
     vector<int> left;
     vector<int> right;
     for (int i = s; i <= e; i++) {
@@ -153,13 +151,13 @@ void merge(vector<int>& array, int s, int e) {
         }
     }
     int l_ptr = 0, r_ptr = 0;
-    
-    /*for (const auto& arr : array) {
-        cout << arr << endl;
-    }*/
-    //cout << array.size() << endl;
+
 
     for (int i = s; i <= e; i++) {
+        if (l_ptr >= left.size()) {
+            break;
+        }
+
         if (r_ptr == (int)right.size() || left[l_ptr] <= right[r_ptr]) {
             array[i] = left[l_ptr];
             l_ptr++;
