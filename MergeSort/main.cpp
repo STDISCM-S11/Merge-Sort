@@ -1,93 +1,99 @@
 #include <iostream>
 #include <utility>
 #include <vector>
-
-#include <random>
+#include <algorithm>
 #include <chrono>
 #include <thread>
 #include <mutex>
-#include <condition_variable>
-#include <cmath>
-#include <numeric>
+#include <queue>
 
 using namespace std;
 
 typedef pair<int, int> ii;
 
-/*
-This function generates all the intervals for merge sort iteratively, given the
-range of indices to sort. Algorithm runs in O(n).
+// Task queue and mutex
+queue<ii> task_queue;
+mutex queue_mutex;
+mutex print_mutex;
 
-Parameters:
-start : int - start of range
-end : int - end of range (inclusive)
 
-Returns a list of integer pairs indicating the ranges for merge sort.
-*/
 vector<ii> generate_intervals(int start, int end);
-
-/*
-This function performs the merge operation of merge sort.
-
-Parameters:
-array : vector<int> - array to sort
-s     : int         - start index of merge
-e     : int         - end index (inclusive) of merge
-*/
 void merge(vector<int>& array, int s, int e);
 
-void iterative_merge_sort(vector<int>& array, const vector<ii>& intervals);
-bool is_sorted(const vector<int>& array);
-
-int main() {
-    // TODO: Seed your randomizer
-    srand(0);
-
-    // TODO: Get array size and thread count from user
-    int n, thread_count;
-    cout << "Enter number: ";
-    cin >> n;
-    cout << "Enter thread count: ";
-    cin >> thread_count;
-
-    // TODO: Generate a random array of given size
-    vector<int> array(n);
-    iota(array.begin(), array.end(), 1); // Filling the array with 1 to n
-    random_shuffle(array.begin(), array.end()); // Shuffle using seeded randomizer
-
-    // TODO: Call the generate_intervals method to generate the merge sequence
-    vector<ii> intervals = generate_intervals(0, n - 1);
-
-    // TODO: Call merge on each interval in sequence
-    auto start_time = chrono::high_resolution_clock::now();
-    iterative_merge_sort(array, intervals);
-    auto end_time = chrono::high_resolution_clock::now();
-
-    // Check if the array is sorted
-    if (!is_sorted(array)) {
-        cout << "Error: Array is not sorted correctly." << endl;
+void print_array(const vector<int>& array) {
+    for (int num : array) {
+        cout << num << " ";
     }
-
-    chrono::duration<double, milli> duration = end_time - start_time;
-    cout << "Time: " << duration.count() << " milliseconds.\n" << endl;
-
-    // Once you get the single-threaded version to work, it's time to implement 
-    // the concurrent version. Good luck :)
+    cout << endl;
 }
 
-void iterative_merge_sort(vector<int>& array, const vector<ii>& intervals) {
-    for (const auto& interval : intervals) {
-        merge(array, interval.first, interval.second);
-    }
-}
-
-bool is_sorted(const vector<int>& array) {
-    for (size_t i = 1; i < array.size(); i++) {
-        if (array[i - 1] > array[i]) {
-            return false;
+// Thread function for merging
+void merge_task(vector<int>& array) {
+    while (true) {
+        ii task;
+        {
+            // Lock the queue to safely extract a task
+            lock_guard<mutex> lock(queue_mutex);
+            if (task_queue.empty()) {
+                return; // No more tasks, exit the thread
+            }
+            task = task_queue.front();
+            task_queue.pop();
+        }
+        merge(array, task.first, task.second);
+        // Synchronize and print the array state
+        {
+            lock_guard<mutex> print_lock(print_mutex);
+            cout << "After merging [" << task.first << ", " << task.second << "]: ";
+            print_array(array);
+            cout << "\n";
         }
     }
-    return true;
+}
+
+int main() {
+    const unsigned int SEED = 42;
+    srand(SEED);
+
+    int N, threadCount;
+    cout << "Enter the size of the array: ";
+    cin >> N;
+    cout << "Enter the thread count: ";
+    cin >> threadCount;
+
+    vector<int> array(N);
+    for (int i = 0; i < N; ++i) {
+        array[i] = i + 1;
+    }
+    random_shuffle(array.begin(), array.end());
+
+    vector<ii> intervals = generate_intervals(0, N - 1);
+
+    // Fill the task queue with merge tasks
+    for (auto& interval : intervals) {
+        task_queue.push(interval);
+    }
+
+    auto start = chrono::high_resolution_clock::now();
+
+    // Create and start threads
+    vector<thread> threads;
+    for (int i = 0; i < threadCount; ++i) {
+        threads.emplace_back(merge_task, ref(array));
+    }
+
+    // Join threads
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> diff = end - start;
+    cout << "Multithreaded merge sort took " << diff.count() << " seconds." << endl;
+
+    // Optional: Check if the array is sorted
+
+    return 0;
 }
 
 vector<ii> generate_intervals(int start, int end) {
@@ -120,53 +126,35 @@ vector<ii> generate_intervals(int start, int end) {
     return retval;
 }
 
-//void merge(vector<int>& array, int s, int e) {
-//    int m = s + (e - s) / 2;
-//    vector<int> left;
-//    vector<int> right;
-//    for (int i = s; i <= e; i++) {
-//        if (i <= m) {
-//            left.push_back(array[i]);
-//        }
-//        else {
-//            right.push_back(array[i]);
-//        }
-//    }
-//    int l_ptr = 0, r_ptr = 0;
-//
-//    for (int i = s; i <= e; i++) {
-//        if (r_ptr == (int)right.size() || left[l_ptr] <= right[r_ptr]) {
-//            array[i] = left[l_ptr];
-//            l_ptr++;
-//        }
-//        else {
-//            array[i] = right[r_ptr];
-//            r_ptr++;
-//        }
-//    }
-//}
-
 void merge(vector<int>& array, int s, int e) {
     int m = s + (e - s) / 2;
-    vector<int> left(array.begin() + s, array.begin() + m + 1);
-    vector<int> right(array.begin() + m + 1, array.begin() + e + 1);
-
-    int l_ptr = 0, r_ptr = 0, k = s;
-
-    while (l_ptr < left.size() && r_ptr < right.size()) {
-        if (left[l_ptr] <= right[r_ptr]) {
-            array[k++] = left[l_ptr++];
+    vector<int> left;
+    vector<int> right;
+    for (int i = s; i <= e; i++) {
+        if (i <= m) {
+            left.push_back(array[i]);
         }
         else {
-            array[k++] = right[r_ptr++];
+            right.push_back(array[i]);
         }
     }
+    int l_ptr = 0, r_ptr = 0;
 
-    while (l_ptr < left.size()) {
-        array[k++] = left[l_ptr++];
-    }
+    for (int i = s; i <= e; i++) {
+        // no more elements on left half
+        if (l_ptr == (int)left.size()) {
+            array[i] = right[r_ptr];
+            r_ptr++;
 
-    while (r_ptr < right.size()) {
-        array[k++] = right[r_ptr++];
+            // no more elements on right half or left element comes first
+        }
+        else if (r_ptr == (int)right.size() || left[l_ptr] <= right[r_ptr]) {
+            array[i] = left[l_ptr];
+            l_ptr++;
+        }
+        else {
+            array[i] = right[r_ptr];
+            r_ptr++;
+        }
     }
 }
