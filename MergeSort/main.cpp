@@ -59,34 +59,16 @@ int main() {
     vector<ii> intervals = generate_intervals(0, n - 1);
 
     // TODO: Call merge on each interval in sequence
-    //auto start_time = chrono::high_resolution_clock::now();
-    //iterative_merge_sort(array, intervals);
-    //auto end_time = chrono::high_resolution_clock::now();
-
-    for (ii interval : intervals) {
-        merge(array, interval.first, interval.second);
-    }
-
+    auto start_time = chrono::high_resolution_clock::now();
+    iterative_merge_sort(array, intervals);
+    auto end_time = chrono::high_resolution_clock::now();
 
     for (const auto& arr : array) {
         cout << arr << endl;
     }
 
-    /*for (const auto& interval : intervals) {
-        cout << interval.first << " " << interval.second << endl;
-    }
-
-    for (const auto& arr : array) {
-        cout << arr  << endl;
-    }*/
-
-    // Check if the array is sorted
-    /*if (!is_sorted(array)) {
-        cout << "Error: Array is not sorted correctly." << endl;
-    }*/
-
-    //chrono::duration<double, milli> duration = end_time - start_time;
-    //cout << "Iterative Merge Sort took " << duration.count() << " milliseconds." << endl;
+    chrono::duration<double, milli> duration = end_time - start_time;
+    cout << "Iterative Merge Sort took " << duration.count() << " milliseconds." << endl;
 
     // Once you get the single-threaded version to work, it's time to implement 
     // the concurrent version. Good luck :)
