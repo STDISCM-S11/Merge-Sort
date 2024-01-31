@@ -41,17 +41,53 @@ void merge_task(vector<int>& array) {
 
         merge(array, task.first, task.second);
 
+        // FOR PRINTING
         // Synchronize and print the array state
-        {
+        /*{
             lock_guard<mutex> print_lock(print_mutex);
             cout << "After merging [" << task.first << ", " << task.second << "]: ";
             print_array(array);
-        }
+        }*/
     }
 }
 
+// For automated testing
+//double run_merge_sort(int N, int threadCount) {
+//    vector<int> array(N);
+//    for (int i = 0; i < N; ++i) {
+//        array[i] = i + 1;
+//    }
+//    random_shuffle(array.begin(), array.end());
+//
+//    queue<ii> empty;
+//    swap(task_queue, empty);
+//
+//    vector<ii> intervals = generate_intervals(0, N - 1);
+//
+//    for (auto& interval : intervals) {
+//        task_queue.push(interval);
+//    }
+//    auto start = chrono::high_resolution_clock::now();
+//
+//    vector<thread> threads;
+//    for (int i = 0; i < threadCount; ++i) {
+//        threads.emplace_back(merge_task, ref(array));
+//    }
+//
+//    for (auto& t : threads) {
+//        t.join();
+//    }
+//    auto end = chrono::high_resolution_clock::now();
+//    chrono::duration<double> diff = end - start;
+//    cout << "Thread Count: " << threadCount;
+//    cout << " Time taken: " << diff.count() << " seconds" << endl;
+//    return diff.count();
+//    // Optional: Check if the array is sorted
+//}
+
+
 int main() {
-    const unsigned int SEED = 42;
+    const unsigned int SEED = 1;
     srand(SEED);
 
     int N, threadCount;
@@ -88,9 +124,26 @@ int main() {
 
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> diff = end - start;
-    cout << "Multithreaded merge sort took " << diff.count() << " seconds." << endl;
+    cout << "Merge sort took " << diff.count() << " seconds." << endl;
 
-    // Optional: Check if the array is sorted
+    //Optional: Check if the array is sorted
+    
+
+    // For automated testing
+    //const int N = pow(2, 23);
+    //const int numTests = 5;
+    //
+    //vector<int> threadCounts = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
+    //for (int threadCount : threadCounts) {
+    //    double totalTime = 0.0;
+    //    for (int i = 0; i < numTests; ++i) {
+    //        totalTime += run_merge_sort(N, threadCount);
+    //    }
+    //    cout << "\n";
+    //    double avgTime = totalTime / numTests;
+    //    cout << "Thread Count: " << threadCount;
+    //    cout << " Average Time: " << avgTime << " seconds\n" << endl;
+    //}
 
     return 0;
 }
