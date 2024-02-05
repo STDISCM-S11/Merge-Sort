@@ -66,36 +66,72 @@ void merge_task(vector<int>& array) {
 
 // For automated testing
 //double run_merge_sort(int N, int threadCount) {
-//    vector<int> array(N);
-//    for (int i = 0; i < N; ++i) {
-//        array[i] = i + 1;
-//    }
-//    random_shuffle(array.begin(), array.end());
-//
-//    queue<ii> empty;
-//    swap(task_queue, empty);
-//
-//    vector<ii> intervals = generate_intervals(0, N - 1);
-//
-//    for (auto& interval : intervals) {
-//        task_queue.push(interval);
-//    }
-//    auto start = chrono::high_resolution_clock::now();
-//
-//    vector<thread> threads;
-//    for (int i = 0; i < threadCount; ++i) {
-//        threads.emplace_back(merge_task, ref(array));
-//    }
-//
-//    for (auto& t : threads) {
-//        t.join();
-//    }
-//    auto end = chrono::high_resolution_clock::now();
-//    chrono::duration<double> diff = end - start;
-//    cout << "Thread Count: " << threadCount;
-//    cout << " Time taken: " << diff.count() << " seconds" << endl;
-//    return diff.count();
-//    // Optional: Check if the array is sorted
+
+    //for (int i = 0; i < N; ++i) {
+    //    array[i] = i + 1;
+    //}
+    //random_shuffle(array.begin(), array.end());
+    //
+    //vector<ii> intervals = generate_intervals(0, N - 1);
+    //
+    //// Fill the task queue with merge tasks
+    //auto start = chrono::high_resolution_clock::now();
+    //
+    //// Create and start threads
+    //vector<thread> threads;
+    //for (int i = 0; i < threadCount; ++i) {
+    //    threads.emplace_back(merge_task, ref(array));
+    //}
+    //
+    //int pos = 0;
+    //int bottomLevel = static_cast<int> (floor(log2(N))) + 1;
+    //
+    //int j = bottomLevel + 1;
+    //
+    //while (j > 0) {
+    //    int nNodes = static_cast<int>(pow(2, j - 1));
+    //
+    //    nNodes = N != nNodes && j == bottomLevel + 1 ? 2 * N - nNodes
+    //        : nNodes;
+    //
+    //    int s = pos;
+    //
+    //    for (int i = pos; i < nNodes + s; i++) {
+    //        {
+    //            unique_lock<mutex> lock(taskM);
+    //            taskQ.push_back(intervals[pos]);
+    //            ctr.fetch_sub(1);
+    //            pos++;
+    //        }
+    //
+    //        taskC.notify_one();
+    //    }
+    //
+    //    j--;
+    //    unique_lock<mutex> lock(taskM);
+    //    waitC.wait(lock, [&]() {
+    //        return ctr.load() == 0;
+    //        });
+    //}
+    //
+    //shouldTerminate = true;
+    //
+    //taskC.notify_all();
+    //
+    //
+    //// Join threads
+    //for (auto& t : threads) {
+    //    t.join();
+    //}
+    //
+    //auto end = chrono::high_resolution_clock::now();
+    //chrono::duration<double> duration = end - start;
+    //
+    //bool isSorted = is_sorted(array.begin(), array.end());
+    //cout << "Concurrent execution time: " << duration.count() << " seconds" << endl;
+    //cout << "Array is " << (isSorted ? "sorted" : "not sorted") << endl;
+    //    // Optional: Check if the array is sorted
+    // return duration.count();
 //}
 
 
