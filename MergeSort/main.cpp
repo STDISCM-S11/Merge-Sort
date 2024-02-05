@@ -6,6 +6,10 @@
 #include <thread>
 #include <mutex>
 #include <deque>
+#include <chrono>
+#include <random>
+#include <cmath>
+#include <condition_variable>
 
 using namespace std;
 
@@ -20,6 +24,8 @@ condition_variable waitC;
 condition_variable taskC;
 mutex taskM;
 
+atomic<int> ctr(0);
+
 
 vector<ii> generate_intervals(int start, int end);
 void merge(vector<int>& array, int s, int e);
@@ -33,7 +39,7 @@ void print_array(const vector<int>& array) {
 
 // Thread function for merging
 void merge_task(vector<int>& array) {
-    while (!shouldTerminate) {
+   while (!shouldTerminate) {
         unique_lock<std::mutex> lock(taskM);
 
         taskC.wait(lock, [&]() {
@@ -112,10 +118,6 @@ int main() {
     vector<ii> intervals = generate_intervals(0, N - 1);
 
     // Fill the task queue with merge tasks
-    for (auto& interval : intervals) {
-        task_queue.push(interval);
-    }
-
     auto start = chrono::high_resolution_clock::now();
 
     // Create and start threads
@@ -124,17 +126,55 @@ int main() {
         threads.emplace_back(merge_task, ref(array));
     }
 
+    int pos = 0;
+    int bottomLevel = static_cast<int> (floor(log2(N))) + 1;
+
+    int j = bottomLevel + 1;
+
+    while (j > 0) {
+        int nNodes = static_cast<int>(pow(2, j - 1));
+
+        nNodes = N != nNodes && j == bottomLevel + 1 ? 2 * N - nNodes
+            : nNodes;
+
+        int s = pos;
+
+        for (int i = pos; i < nNodes + s; i++) {
+            {
+                unique_lock<mutex> lock(taskM);
+                taskQ.push_back(intervals[pos]);
+                ctr.fetch_sub(1);
+                pos++;
+            }
+
+            taskC.notify_one();
+        }
+
+        j--;
+        unique_lock<mutex> lock(taskM);
+        waitC.wait(lock, [&]() {
+            return ctr.load() == 0;
+            });
+    }
+
+    shouldTerminate = true;
+
+    taskC.notify_all();
+
+
     // Join threads
     for (auto& t : threads) {
         t.join();
     }
 
     auto end = chrono::high_resolution_clock::now();
-    chrono::duration<double> diff = end - start;
-    cout << "Merge sort took " << diff.count() << " seconds." << endl;
+    chrono::duration<double> duration = end - start;
+
+    bool isSorted = is_sorted(array.begin(), array.end());
+    cout << "Concurrent execution time: " << duration.count() << " seconds" << endl;
+    cout << "Array is " << (isSorted ? "sorted" : "not sorted") << endl;
 
     //Optional: Check if the array is sorted
-    
 
     // For automated testing
     //const int N = pow(2, 23);
