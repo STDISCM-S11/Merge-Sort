@@ -5,16 +5,21 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
-#include <queue>
+#include <deque>
 
 using namespace std;
 
 typedef pair<int, int> ii;
 
 // Task queue and mutex
-queue<ii> task_queue;
-mutex queue_mutex;
-mutex print_mutex;
+bool shouldTerminate = false;
+
+int N;
+deque<ii> taskQ;
+condition_variable waitC;
+condition_variable taskC;
+mutex taskM;
+
 
 vector<ii> generate_intervals(int start, int end);
 void merge(vector<int>& array, int s, int e);
@@ -28,26 +33,28 @@ void print_array(const vector<int>& array) {
 
 // Thread function for merging
 void merge_task(vector<int>& array) {
-    while (true) {
-        ii task;
-        {
-            lock_guard<mutex> lock(queue_mutex);
-            if (task_queue.empty()) {
-                return;
+    while (!shouldTerminate) {
+        unique_lock<std::mutex> lock(taskM);
+
+        taskC.wait(lock, [&]() {
+            return !taskQ.empty() || shouldTerminate;
+            });
+
+        if (shouldTerminate) {
+            if (taskQ.empty()) {
+                lock.unlock();
+                taskC.notify_all();
+                continue;
             }
-            task = task_queue.front();
-            task_queue.pop();
         }
 
-        merge(array, task.first, task.second);
+        ii interval = taskQ.front();
+        taskQ.pop_front();
+        lock.unlock();
 
-        // FOR PRINTING
-        // Synchronize and print the array state
-        /*{
-            lock_guard<mutex> print_lock(print_mutex);
-            cout << "After merging [" << task.first << ", " << task.second << "]: ";
-            print_array(array);
-        }*/
+        merge(array, interval.first, interval.second);
+        ctr.fetch_add(1);
+        waitC.notify_one();
     }
 }
 
